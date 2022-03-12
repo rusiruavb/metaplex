@@ -59,7 +59,9 @@ export const ExploreCollections: FC<ExploreCollectionsProps> = ({
 
   const setCollections = useCallback(
     groups => {
-      Promise.all(groups.map(async group => await getData(group))).then(res => {
+      Promise.all(
+        groups.map(async group => await getData(group, group[0][0].thumbnail.metadata.pubkey))
+      ).then(res => {
         setDataItems(() => searchNFTByName(res, searchText))
         setIsCollectionsLoading(false)
       })

@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useCallback, useEffect, useState } from 'react'
 import CN from 'classnames'
 import { Chip } from '../../atoms/Chip'
 import { TextField } from '../../atoms/TextField'
@@ -9,8 +9,24 @@ import { ArtDetails } from '../../molecules/ArtDetails'
 import { QuickBuy } from '../../sections/QuickBuy'
 
 import { Link } from 'react-router-dom'
+import { useExtendedCollection } from '../../../hooks'
+import { cache, fromLamports, MintParser, PriceFloorType, useConnection } from '@oyster/common'
+import { BN } from 'bn.js'
+import { PublicKey } from '@solana/web3.js'
+
 export interface CollectionItemsProps {
   [x: string]: any
+}
+
+export function useMintD() {
+  const connection = useConnection()
+
+  const getMintData = (key: string | PublicKey) => {
+    const id = typeof key === 'string' ? key : key?.toBase58()
+    return cache.query(connection, id, MintParser)
+  }
+
+  return getMintData
 }
 
 export const CollectionItems: FC<CollectionItemsProps> = ({
@@ -22,6 +38,29 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
   const [showQuickBuyModal, setShowQuickBuyModal] = useState<boolean>(false)
   const [showArtModalModal, setShowArtModalModal] = useState<boolean>(false)
   const [selectedArt, setSelectedArt] = useState<any>(null)
+
+  const [nftItems, setNftItems] = useState([])
+
+  const getMintData = useMintD()
+
+  useEffect(() => {
+    setNftItems(() => dataItems.map(bindAmount))
+  }, [dataItems])
+
+  const bindAmount = auctionView => {
+    const dx = getMintData(auctionView[0].auction.info.tokenMint)
+    const participationFixedPrice =
+      auctionView[0].auctionManager.participationConfig?.fixedPrice || 0
+    const participationOnly = auctionView[0].auctionManager.numWinners.eq(new BN(0))
+    const priceFloor =
+      auctionView[0].auction.info.priceFloor.type === PriceFloorType.Minimum
+        ? auctionView[0].auction.info.priceFloor.minPrice?.toNumber() || 0
+        : 0
+    const amount = fromLamports(participationOnly ? participationFixedPrice : priceFloor, dx.info)
+    return { ...auctionView, amount }
+  }
+
+  console.log('nftItems', nftItems)
 
   return (
     <div className={CollectionItemsClasses} {...restProps}>
@@ -117,26 +156,28 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
       </div>
 
       <div className='grid grid-cols-2 gap-[16px] pt-[32px] md:grid-cols-3 md:gap-[28px] lg:grid-cols-4'>
-        {dataItems.map((art: any, index: number) => {
-          if (art[0].state == '0') {
-            return (
-              <Link to={`/auction/${art[0].auction.pubkey}`}>
-                <ArtCard
-                  // onClickBuy={() => {
-                  //   setSelectedArt(art)
-                  //   setShowQuickBuyModal(true)
-                  // }}
-                  // onClickDetails={() => {
-                  //   setSelectedArt(art)
-                  //   setShowArtModalModal(true)
-                  // }}
-                  key={index}
-                  pubkey={art[0].thumbnail.metadata.pubkey}
-                  auction={art[0]}
-                />
-              </Link>
-            )
-          }
+        {nftItems.map((art: any, index: number) => {
+          // console.log('art', art[0])
+
+          // if (art[0].state == '0') {
+          return (
+            <Link key={index} to={`/auction/${art[0].auction.pubkey}`}>
+              <ArtCard
+                // onClickBuy={() => {
+                //   setSelectedArt(art)
+                //   setShowQuickBuyModal(true)
+                // }}
+                // onClickDetails={() => {
+                //   setSelectedArt(art)
+                //   setShowArtModalModal(true)
+                // }}
+
+                pubkey={art[0].thumbnail.metadata.pubkey}
+                auction={art[0]}
+              />
+            </Link>
+          )
+          // }
         })}
       </div>
 
