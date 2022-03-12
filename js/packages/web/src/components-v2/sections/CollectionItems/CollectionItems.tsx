@@ -29,6 +29,9 @@ export function useMintD() {
   return getMintData
 }
 
+const SORT_LOW_TO_HIGH = 'Price: Low to High'
+const SORT_HIGH_TO_LOW = 'Price: High to Low'
+
 export const CollectionItems: FC<CollectionItemsProps> = ({
   dataItems,
   className,
@@ -60,7 +63,15 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
     return { ...auctionView, amount }
   }
 
-  console.log('nftItems', nftItems)
+  const shortByPrice = val => {
+    const dataArray = nftItems.sort(function (a: any, b: any) {
+      return val === SORT_LOW_TO_HIGH ? a.amount - b.amount : b.amount - a.amount
+    })
+    setNftItems([])
+    setTimeout(() => {
+      setNftItems(() => [...dataArray])
+    }, 1000)
+  }
 
   return (
     <div className={CollectionItemsClasses} {...restProps}>
@@ -99,18 +110,21 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
             const onSelectOption = (value: string) => {
               setIsOpen(false)
               setInnerValue(value)
+              if (value === SORT_HIGH_TO_LOW || value === SORT_LOW_TO_HIGH) {
+                shortByPrice(value)
+              }
             }
 
             const options = [
               { label: 'Art: A to Z', value: 'Art: A to Z' },
               { label: 'Art: Z to A', value: 'Art: Z to A' },
               {
-                label: 'Price: Low to High',
-                value: 'Price: Low to High',
+                label: SORT_LOW_TO_HIGH,
+                value: SORT_LOW_TO_HIGH,
               },
               {
-                label: 'Price: High to Low',
-                value: 'Price: High to Low',
+                label: SORT_HIGH_TO_LOW,
+                value: SORT_HIGH_TO_LOW,
               },
             ]
 
