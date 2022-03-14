@@ -1,13 +1,14 @@
-import React from 'react'
-import { Header } from '../../components-v2/sections/Header'
-import { Footer } from '../../components-v2/sections/Footer'
+import React, { FC } from 'react'
+import { Header } from '../../ui/sections/Header'
+import { Footer } from '../../ui/sections/Footer'
+import { SubFooter } from '../../ui/sections/SubFooter'
 
-export const AppLayout = React.memo(function AppLayoutImpl(props: any) {
-  const { children } = props
+export const AppLayout: FC = React.memo(function AppLayoutImpl({ children }) {
   return (
     <>
       <Header />
-      <div className='wrapper pt-[60px] lg:pt-[85px]'>{children}</div>
+      <div className='wrapper'>{children}</div>
+      <SubFooter />
       <Footer />
     </>
   )
