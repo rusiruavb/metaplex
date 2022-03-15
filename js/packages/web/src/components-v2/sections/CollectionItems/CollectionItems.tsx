@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import CN from 'classnames'
 import { Chip } from '../../atoms/Chip'
 import { TextField } from '../../atoms/TextField'
@@ -9,7 +9,6 @@ import { ArtDetails } from '../../molecules/ArtDetails'
 import { QuickBuy } from '../../sections/QuickBuy'
 
 import { Link } from 'react-router-dom'
-import { useExtendedCollection } from '../../../hooks'
 import { cache, fromLamports, MintParser, PriceFloorType, useConnection } from '@oyster/common'
 import { BN } from 'bn.js'
 import { PublicKey } from '@solana/web3.js'
@@ -60,17 +59,19 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
         ? auctionView[0].auction.info.priceFloor.minPrice?.toNumber() || 0
         : 0
     const amount = fromLamports(participationOnly ? participationFixedPrice : priceFloor, dx.info)
-    return { ...auctionView, amount }
+
+    return { ...auctionView[0], amount }
   }
 
   const shortByPrice = val => {
-    const dataArray = nftItems.sort(function (a: any, b: any) {
+    const dataArray = [...nftItems].sort(function (a: any, b: any) {
       return val === SORT_LOW_TO_HIGH ? a.amount - b.amount : b.amount - a.amount
     })
+
     setNftItems([])
     setTimeout(() => {
       setNftItems(() => [...dataArray])
-    }, 1000)
+    }, 1)
   }
 
   return (
@@ -148,7 +149,7 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
                 {isOpen && (
                   <DropDownBody
                     align='right'
-                    className='mt-[8px] w-full border border-B-10 shadow-lg shadow-B-700/10'>
+                    className='shadow-lg mt-[8px] w-full border border-B-10 shadow-B-700/10'>
                     {options?.map((option: any, index: number) => {
                       const { label, value } = option
 
@@ -171,11 +172,11 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
 
       <div className='grid grid-cols-2 gap-[16px] pt-[32px] md:grid-cols-3 md:gap-[28px] lg:grid-cols-4'>
         {nftItems.map((art: any, index: number) => {
-          // console.log('art', art[0])
+          // console.log('art', art)
 
-          // if (art[0].state == '0') {
+          // if (art.state == '0') {
           return (
-            <Link key={index} to={`/auction/${art[0].auction.pubkey}`}>
+            <Link key={index} to={`/auction/${art.auction.pubkey}`}>
               <ArtCard
                 // onClickBuy={() => {
                 //   setSelectedArt(art)
@@ -186,8 +187,8 @@ export const CollectionItems: FC<CollectionItemsProps> = ({
                 //   setShowArtModalModal(true)
                 // }}
 
-                pubkey={art[0].thumbnail.metadata.pubkey}
-                auction={art[0]}
+                pubkey={art.thumbnail.metadata.pubkey}
+                auction={art}
               />
             </Link>
           )
